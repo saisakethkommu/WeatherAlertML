@@ -1,3 +1,4 @@
+using WeatherAlert.AI.Services;
 using WeatherAlert.API.Services;
 using WeatherAlert.ML.Data;
 using WeatherAlert.ML.Prediction;
@@ -45,6 +46,8 @@ builder.Services.AddSingleton<SubscriberRepository>(sp =>
 
 // Email service
 builder.Services.AddSingleton<EmailAlertService>();
+// WeatherAIService uses IHttpClientFactory so must be scoped not singleton
+builder.Services.AddScoped<WeatherAIService>();
 
 // Training progress service — singleton so both the trainer
 // and the progress endpoint share the same instance

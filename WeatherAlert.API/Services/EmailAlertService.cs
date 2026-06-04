@@ -58,6 +58,10 @@ public class EmailAlertService(IConfiguration config, ILogger<EmailAlertService>
         logger.LogInformation("Alert email sent to {Email}", to);
     }
 
+    // Called by the AI controller to send a pre-built HTML email
+    public async Task SendRawEmailAsync(string to, string subject, string body)
+        => await SendEmailAsync(to, subject, body);
+
     private static string BuildEmailBody(
         string name,
         string city,

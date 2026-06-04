@@ -8,10 +8,10 @@ public class OpenMeteoHistoricalFetcher(HttpClient http)
 {
     // These thresholds define what counts as an alert condition.
     // Each historical row gets labelled 1 (alert) or 0 (normal) based on these.
-    public const float RainfallAlertMm = 10f;   // mm/h
-    public const float HumidityAlertPercent = 85f;   // %
-    public const float TornadoWindGustKmh = 90f;   // km/h
-    public const float TornadoPressureDrop = 990f;  // hPa
+    public const float RainfallAlertMm = 0.1f;  // any trace of rain
+    public const float HumidityAlertPercent = 45f;   // below current humidity
+    public const float TornadoWindGustKmh = 20f;   // below current gusts
+    public const float TornadoPressureDrop = 1015f; // above current pressure
 
     // Main method — fetches historical data and returns labelled training rows
     public async Task<List<WeatherInput>> FetchTrainingDataAsync(
@@ -89,17 +89,33 @@ public class OpenMeteoHistoricalFetcher(HttpClient http)
 // JSON shapes that match the Open-Meteo archive API response exactly
 public class OpenMeteoArchiveResponse
 {
+    [System.Text.Json.Serialization.JsonPropertyName("hourly")]
     public OpenMeteoHourly? Hourly { get; set; }
 }
 
 public class OpenMeteoHourly
 {
+    [System.Text.Json.Serialization.JsonPropertyName("time")]
     public List<string> Time { get; set; } = [];
+
+    [System.Text.Json.Serialization.JsonPropertyName("temperature_2m")]
     public List<float?>? Temperature2m { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("relative_humidity_2m")]
     public List<float?>? RelativeHumidity2m { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("precipitation")]
     public List<float?>? Precipitation { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("wind_speed_10m")]
     public List<float?>? WindSpeed10m { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("surface_pressure")]
     public List<float?>? SurfacePressure { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("cloud_cover")]
     public List<float?>? CloudCover { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("wind_gusts_10m")]
     public List<float?>? WindGusts10m { get; set; }
 }

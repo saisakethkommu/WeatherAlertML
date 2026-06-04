@@ -382,3 +382,40 @@ p {
 .log-error .log-message {
     color: #fc8181;
 }
+
+/* AI results */
+.ai-summary {
+    background: #e3f2fd;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: #1565c0;
+}
+
+.ai-recommendation {
+    background: #f3e5f5;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 0.9rem;
+}
+
+.risk-high {
+    color: #d32f2f;
+    font-weight: 700;
+}
+
+.risk-medium {
+    color: #f57c00;
+    font-weight: 700;
+}
+
+.risk-low {
+    color: #388e3c;
+    font-weight: 700;
+}
+
+.risk-unknown {
+    color: #9e9e9e;
+}

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherAlert.API", "Weather
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherAlert.UI", "WeatherAlert.UI\WeatherAlert.UI.csproj", "{754D1AC4-DF55-4B8C-9860-6651467CF6D0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherAlert.AI", "WeatherAlert.AI\WeatherAlert.AI.csproj", "{4A191F8C-D200-4D44-B3AC-72DF858FB8C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{754D1AC4-DF55-4B8C-9860-6651467CF6D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{754D1AC4-DF55-4B8C-9860-6651467CF6D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{754D1AC4-DF55-4B8C-9860-6651467CF6D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A191F8C-D200-4D44-B3AC-72DF858FB8C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A191F8C-D200-4D44-B3AC-72DF858FB8C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A191F8C-D200-4D44-B3AC-72DF858FB8C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A191F8C-D200-4D44-B3AC-72DF858FB8C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

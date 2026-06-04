@@ -44,21 +44,118 @@
         }
     </div>
 
-    <!-- Step 2 - Send Alerts -->
+    <!-- Step 2 - ML.NET Alerts -->
     <div class="section-card">
-        <h2>Step 2 — Send Alerts to All Subscribers</h2>
+        <h2>Step 2 — Send ML.NET Alerts</h2>
         <p>
             Fetches current weather for each subscriber's location, runs it through
-            both ML models, and emails results to subscribers with active alerts.
+            both ML models — <strong>Decision Tree</strong> and <strong>Random Forest</strong> —
+            and emails results to subscribers with active alerts.
         </p>
         <button class="btn-primary" @onclick="SendAlerts" disabled="@sending">
-            @(sending ? "⏳ Sending..." : "📧 Send Alerts Now")
+            @(sending ? "⏳ Sending..." : "📧 Send ML.NET Alerts")
         </button>
         @if (!string.IsNullOrEmpty(sendMessage))
         {
             <p class="status-msg">@sendMessage</p>
         }
     </div>
+
+    <!-- Step 3 - AI Foundry Alerts -->
+    <div class="section-card">
+        <h2>Step 3 — Send AI Foundry Alerts</h2>
+        <p>
+            Sends the same live weather readings to <strong>Azure AI Foundry (GPT-4o-mini)</strong>
+            which analyses conditions and generates a natural language weather report.
+            Compare this approach with the ML.NET predictions above.
+        </p>
+        <button class="btn-secondary" @onclick="SendAIAlerts" disabled="@sendingAI">
+            @(sendingAI ? "⏳ Analysing..." : "🤖 Send AI Alerts")
+        </button>
+        @if (!string.IsNullOrEmpty(sendAIMessage))
+        {
+            <p class="status-msg">@sendAIMessage</p>
+        }
+    </div>
+
+    <!-- AI Analysis Results -->
+    @if (aiResults.Count > 0)
+    {
+        <div class="section-card">
+            <h2>🤖 AI Foundry Analysis Results</h2>
+            <p class="hint">
+                GPT-4o-mini analysed the same live weather data and provided
+                this natural language assessment.
+            </p>
+
+            @foreach (var result in aiResults)
+            {
+                <div class="result-block">
+                    <h3>@result.Subscriber — @result.Location</h3>
+
+                    <div class="weather-input">
+                        <span>🌡️ @result.WeatherInput.Temperature.ToString("F1")°C</span>
+                        <span>💧 @result.WeatherInput.Humidity.ToString("F0")%</span>
+                        <span>🌧️ @result.WeatherInput.Precipitation.ToString("F1")mm</span>
+                        <span>💨 @result.WeatherInput.WindSpeed.ToString("F1")km/h</span>
+                        <span>🌬️ Gusts @result.WeatherInput.WindGusts.ToString("F1")km/h</span>
+                        <span>🔵 @result.WeatherInput.SurfacePressure.ToString("F0")hPa</span>
+                    </div>
+
+                    <div class="ai-summary">
+                        <strong>AI Summary:</strong> @result.Analysis.Summary
+                    </div>
+
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Alert Type</th>
+                                <th>Risk Level</th>
+                                <th>Alert</th>
+                                <th>AI Explanation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="@(result.Analysis.Rainfall.IsAlert ? "row-alert" : "row-normal")">
+                                <td>Rainfall</td>
+                                <td>
+                                    <span class="risk-@result.Analysis.Rainfall.RiskLevel.ToLower()">
+                                        @result.Analysis.Rainfall.RiskLevel
+                                    </span>
+                                </td>
+                                <td>@(result.Analysis.Rainfall.IsAlert ? "⚠️ ALERT" : "✅ Normal")</td>
+                                <td>@result.Analysis.Rainfall.Explanation</td>
+                            </tr>
+                            <tr class="@(result.Analysis.Humidity.IsAlert ? "row-alert" : "row-normal")">
+                                <td>Humidity</td>
+                                <td>
+                                    <span class="risk-@result.Analysis.Humidity.RiskLevel.ToLower()">
+                                        @result.Analysis.Humidity.RiskLevel
+                                    </span>
+                                </td>
+                                <td>@(result.Analysis.Humidity.IsAlert ? "⚠️ ALERT" : "✅ Normal")</td>
+                                <td>@result.Analysis.Humidity.Explanation</td>
+                            </tr>
+                            <tr class="@(result.Analysis.Tornado.IsAlert ? "row-alert" : "row-normal")">
+                                <td>Tornado</td>
+                                <td>
+                                    <span class="risk-@result.Analysis.Tornado.RiskLevel.ToLower()">
+                                        @result.Analysis.Tornado.RiskLevel
+                                    </span>
+                                </td>
+                                <td>@(result.Analysis.Tornado.IsAlert ? "⚠️ ALERT" : "✅ Normal")</td>
+                                <td>@result.Analysis.Tornado.Explanation</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="ai-recommendation">
+                        💡 <strong>AI Recommendation:</strong> @result.Analysis.Recommendation
+                    </div>
+                </div>
+            }
+        </div>
+    }
 
     <!-- ML Prediction Results -->
     @if (alertResults.Count > 0)
@@ -156,6 +253,9 @@
     private bool sending = false;
     private string trainMessage = string.Empty;
     private string sendMessage = string.Empty;
+    private List<AIResultGroup> aiResults = [];
+    private bool sendingAI = false;
+    private string sendAIMessage = string.Empty;
 
     // Live training log entries polled from the API
     private List<TrainingLogDto> trainingLogs = [];
@@ -250,6 +350,32 @@
         }
     }
 
+    private async Task SendAIAlerts()
+    {
+        sendingAI = true;
+        sendAIMessage = string.Empty;
+        aiResults = [];
+
+        var response = await ApiClient.PostAsync("api/ai/analyse-and-send", null);
+        sendingAI = false;
+
+        if (response.IsSuccessStatusCode)
+        {
+            var data = await response.Content
+                .ReadFromJsonAsync<AIAlertsResponse>();
+
+            if (data?.Results != null)
+                aiResults = data.Results;
+
+            sendAIMessage = $"✅ AI analysed {data?.Processed} subscriber(s).";
+        }
+        else
+        {
+            var err = await response.Content.ReadAsStringAsync();
+            sendAIMessage = $"❌ {err}";
+        }
+    }
+
     // Clean up the timer when the component is disposed
     public void Dispose() => _pollTimer?.Dispose();
 
@@ -309,5 +435,35 @@
         public bool IsAlert { get; set; }
         public float Confidence { get; set; }
         public string Message { get; set; } = string.Empty;
+    }
+
+    private class AIAlertsResponse
+    {
+        public int Processed { get; set; }
+        public List<AIResultGroup> Results { get; set; } = [];
+    }
+
+    private class AIResultGroup
+    {
+        public string Subscriber { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public WeatherInputDto WeatherInput { get; set; } = new();
+        public AIAnalysisDto Analysis { get; set; } = new();
+    }
+
+    private class AIAnalysisDto
+    {
+        public string Summary { get; set; } = string.Empty;
+        public AIAssessmentDto Rainfall { get; set; } = new();
+        public AIAssessmentDto Humidity { get; set; } = new();
+        public AIAssessmentDto Tornado { get; set; } = new();
+        public string Recommendation { get; set; } = string.Empty;
+    }
+
+    private class AIAssessmentDto
+    {
+        public bool IsAlert { get; set; }
+        public string RiskLevel { get; set; } = string.Empty;
+        public string Explanation { get; set; } = string.Empty;
     }
 }
