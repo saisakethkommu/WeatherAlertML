@@ -1,0 +1,384 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+}
+
+/* Navbar */
+.navbar {
+    background: #1565c0;
+    color: white;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.brand {
+    color: white;
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    margin-left: 24px;
+    font-weight: 500;
+}
+
+    .nav-links a:hover {
+        text-decoration: underline;
+    }
+
+/* Page container */
+.container {
+    max-width: 1100px;
+    margin: 32px auto;
+    padding: 0 24px;
+}
+
+h1 {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    color: #1565c0;
+}
+
+h2 {
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+    color: #2d3748;
+}
+
+p {
+    color: #4a5568;
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+/* Hero */
+.hero {
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+    .hero h1 {
+        font-size: 2rem;
+        margin-bottom: 16px;
+    }
+
+    .hero p {
+        max-width: 600px;
+        margin: 0 auto 24px;
+        font-size: 1.05rem;
+    }
+
+.hero-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+    .hero-actions a {
+        text-decoration: none;
+        padding: 12px 28px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+/* Info grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.info-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+    .info-card h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+        color: #1565c0;
+    }
+
+/* Cards */
+.form-card, .section-card {
+    background: white;
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+/* Form */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+    .form-group label {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #374151;
+    }
+
+    .form-group input {
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color .2s;
+    }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1565c0;
+        }
+
+.checkbox-group {
+    display: flex;
+    gap: 24px;
+}
+
+    .checkbox-group label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+/* Buttons */
+.btn-primary {
+    background: #1565c0;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+    margin-top: 16px;
+    display: inline-block;
+}
+
+    .btn-primary:hover:not(:disabled) {
+        background: #1976d2;
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+.btn-secondary {
+    background: #37474f;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+    margin-top: 16px;
+    display: inline-block;
+}
+
+    .btn-secondary:hover:not(:disabled) {
+        background: #546e7a;
+    }
+
+    .btn-secondary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #1565c0;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    margin-bottom: 12px;
+}
+
+/* Alerts */
+.alert-success {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    color: #2e7d32;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.alert-error {
+    background: #ffebee;
+    border: 1px solid #ef9a9a;
+    color: #c62828;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.status-msg {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.hint {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 16px;
+}
+
+/* Weather input display */
+.weather-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+/* Results table */
+.result-block {
+    margin-bottom: 28px;
+}
+
+    .result-block h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #374151;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+    .results-table th {
+        background: #1565c0;
+        color: white;
+        padding: 10px 12px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .results-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .results-table tr:hover td {
+        background: #f8fafc;
+    }
+
+.row-alert td {
+    background: #fff8f0 !important;
+}
+
+.row-normal td {
+    background: #f0fdf4 !important;
+}
+
+.model-badge {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Training log panel */
+.training-log {
+    margin-top: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+    .training-log h3 {
+        background: #1565c0;
+        color: white;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+.log-entries {
+    background: #1a1a2e;
+    padding: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
+}
+
+.log-entry {
+    display: flex;
+    gap: 12px;
+    padding: 3px 0;
+    border-bottom: 1px solid #2a2a4a;
+}
+
+.log-time {
+    color: #666;
+    min-width: 70px;
+}
+
+.log-info .log-message {
+    color: #a0aec0;
+}
+
+.log-success .log-message {
+    color: #68d391;
+}
+
+.log-warning .log-message {
+    color: #f6ad55;
+}
+
+.log-error .log-message {
+    color: #fc8181;
+}

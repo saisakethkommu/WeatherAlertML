@@ -1,0 +1,55 @@
+﻿@page "/"
+
+<PageTitle>Weather Alert ML Demo</PageTitle>
+
+<div class="container">
+    <div class="hero">
+        <h1>🌩️ Weather Alert ML Demo</h1>
+        <p>
+            A demonstration of machine learning in .NET using ML.NET.
+            Two models — <strong>Decision Tree</strong> and <strong>Random Forest</strong> —
+            are trained on real historical weather data from Open-Meteo and used
+            to predict rainfall, humidity and tornado alerts for subscribers.
+        </p>
+
+        <div class="hero-actions">
+            <a href="/subscribe" class="btn-primary">Subscribe to Alerts</a>
+            <a href="/dashboard" class="btn-secondary">View Dashboard</a>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <h3>🧠 How it works</h3>
+            <p>
+                90 days of historical weather data is fetched from Open-Meteo
+                and used to train two ML models. Each row is automatically
+                labelled as alert or normal based on weather thresholds.
+            </p>
+        </div>
+        <div class="info-card">
+            <h3>🌲 Decision Tree</h3>
+            <p>
+                Uses gradient boosted decision trees (FastTree) to learn
+                patterns in weather conditions and predict alert probability
+                with a confidence score.
+            </p>
+        </div>
+        <div class="info-card">
+            <h3>🌳 Random Forest</h3>
+            <p>
+                Builds an ensemble of independent trees (FastForest), each
+                trained on a random feature subset. More stable than a single
+                tree — final prediction is a vote across all trees.
+            </p>
+        </div>
+        <div class="info-card">
+            <h3>📧 Alerts</h3>
+            <p>
+                When alert conditions are predicted, an email is sent to the
+                subscriber showing both model results side by side so you can
+                compare Decision Tree vs Random Forest predictions.
+            </p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,124 @@
+﻿@page "/subscribe"
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>Subscribe — Weather Alerts</PageTitle>
+
+<div class="container">
+    <h1>Subscribe to Weather Alerts</h1>
+    <p>Enter your details below to receive ML-powered weather predictions for your location.</p>
+
+    @if (submitted)
+    {
+        <div class="alert-success">
+            ✅ Subscribed successfully! You will receive alerts at <strong>@model.Email</strong>.
+        </div>
+    }
+    else
+    {
+        <div class="form-card">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input @bind="model.Name" placeholder="Jane Smith" />
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input @bind="model.Email" type="email" placeholder="jane@example.com" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>City</label>
+                    <input @bind="model.City" placeholder="New York" />
+                </div>
+                <div class="form-group">
+                    <label>State</label>
+                    <input @bind="model.State" placeholder="NY" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Latitude</label>
+                    <input @bind="model.Latitude" type="number" step="0.0001" placeholder="40.7128" />
+                </div>
+                <div class="form-group">
+                    <label>Longitude</label>
+                    <input @bind="model.Longitude" type="number" step="0.0001" placeholder="-74.0060" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Alert Types</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" @bind="wantsRainfall" /> 🌧️ Rainfall</label>
+                    <label><input type="checkbox" @bind="wantsHumidity" /> 💧 Humidity</label>
+                    <label><input type="checkbox" @bind="wantsTornado" /> 🌪️ Tornado</label>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert-error">@errorMessage</div>
+            }
+
+            <button class="btn-primary" @onclick="Submit" disabled="@submitting">
+                @(submitting ? "Subscribing..." : "Subscribe")
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    // .NET10: Collection expression for initialising the model
+    private SubscribeModel model = new();
+    private bool wantsRainfall = true;
+    private bool wantsHumidity = true;
+    private bool wantsTornado = true;
+    private bool submitted = false;
+    private bool submitting = false;
+    private string errorMessage = string.Empty;
+    private HttpClient ApiClient => HttpClientFactory.CreateClient("WeatherAlertAPI");
+
+    private async Task Submit()
+    {
+        errorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(model.Name) ||
+            string.IsNullOrWhiteSpace(model.Email))
+        {
+            errorMessage = "Name and email are required.";
+            return;
+        }
+
+        // .NET10: Collection expression to build the preferences list
+        model.AlertPreferences = [];
+        if (wantsRainfall) model.AlertPreferences.Add("Rainfall");
+        if (wantsHumidity) model.AlertPreferences.Add("Humidity");
+        if (wantsTornado) model.AlertPreferences.Add("Tornado");
+
+        submitting = true;
+        var response = await ApiClient.PostAsJsonAsync("api/subscribers", model);
+        submitting = false;
+
+        if (response.IsSuccessStatusCode)
+            submitted = true;
+        else
+            errorMessage = "Subscription failed. Please try again.";
+    }
+
+    // Local model class — matches SubscriberRequest in the API
+    private class SubscribeModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;
+        public float Latitude { get; set; }
+        public float Longitude { get; set; }
+
+        // .NET10: Collection expression
+        public List<string> AlertPreferences { get; set; } = [];
+    }
+}

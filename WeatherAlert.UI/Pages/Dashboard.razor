@@ -1,0 +1,313 @@
+﻿@page "/dashboard"
+@inject IHttpClientFactory HttpClientFactory
+@implements IDisposable
+
+<PageTitle>Dashboard — Weather Alerts</PageTitle>
+
+<div class="container">
+    <h1>Alert Dashboard</h1>
+
+    <!-- Step 1 - Train ML Models -->
+    <div class="section-card">
+        <h2>Step 1 — Train ML Models</h2>
+        <p>
+            Fetches 90 days of historical weather from Open-Meteo and trains
+            a <strong>Decision Tree</strong> and <strong>Random Forest</strong> model
+            for Rainfall, Humidity and Tornado prediction.
+        </p>
+        <button class="btn-secondary" @onclick="TrainModels" disabled="@training">
+            @(training ? "⏳ Training in progress..." : "🧠 Train Models")
+        </button>
+
+        @if (!string.IsNullOrEmpty(trainMessage))
+        {
+            <p class="status-msg">@trainMessage</p>
+        }
+
+        <!-- Live training log panel -->
+        @if (trainingLogs.Count > 0)
+        {
+            <div class="training-log">
+                <h3>Live Training Log</h3>
+                <div class="log-entries">
+                    @foreach (var log in trainingLogs)
+                    {
+                        <div class="log-entry log-@log.Level.ToLower()">
+                            <span class="log-time">
+                                @log.Timestamp.ToLocalTime().ToString("HH:mm:ss")
+                            </span>
+                            <span class="log-message">@log.Message</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Step 2 - Send Alerts -->
+    <div class="section-card">
+        <h2>Step 2 — Send Alerts to All Subscribers</h2>
+        <p>
+            Fetches current weather for each subscriber's location, runs it through
+            both ML models, and emails results to subscribers with active alerts.
+        </p>
+        <button class="btn-primary" @onclick="SendAlerts" disabled="@sending">
+            @(sending ? "⏳ Sending..." : "📧 Send Alerts Now")
+        </button>
+        @if (!string.IsNullOrEmpty(sendMessage))
+        {
+            <p class="status-msg">@sendMessage</p>
+        }
+    </div>
+
+    <!-- ML Prediction Results -->
+    @if (alertResults.Count > 0)
+    {
+        <div class="section-card">
+            <h2>Prediction Results</h2>
+            <p class="hint">
+                Each row shows what <strong>both ML models</strong> predicted
+                for each subscriber's location.
+            </p>
+
+            @foreach (var result in alertResults)
+            {
+                <div class="result-block">
+                    <h3>@result.Subscriber — @result.Location</h3>
+
+                    <!-- Weather readings used as input to the models -->
+                    <div class="weather-input">
+                        <span>🌡️ @result.WeatherInput.Temperature.ToString("F1")°C</span>
+                        <span>💧 @result.WeatherInput.Humidity.ToString("F0")%</span>
+                        <span>🌧️ @result.WeatherInput.Precipitation.ToString("F1")mm</span>
+                        <span>💨 @result.WeatherInput.WindSpeed.ToString("F1")km/h</span>
+                        <span>🌬️ Gusts @result.WeatherInput.WindGusts.ToString("F1")km/h</span>
+                        <span>🔵 @result.WeatherInput.SurfacePressure.ToString("F0")hPa</span>
+                    </div>
+
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Alert Type</th>
+                                <th>ML Model</th>
+                                <th>Prediction</th>
+                                <th>Confidence</th>
+                                <th>Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in result.Predictions)
+                            {
+                                <tr class="@(p.IsAlert ? "row-alert" : "row-normal")">
+                                    <td>@p.AlertType</td>
+                                    <td><span class="model-badge">@p.ModelUsed</span></td>
+                                    <td>@(p.IsAlert ? "⚠️ ALERT" : "✅ Normal")</td>
+                                    <td>@p.Confidence.ToString("P0")</td>
+                                    <td>@p.Message</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Subscribers List -->
+    <div class="section-card">
+        <h2>Current Subscribers</h2>
+        <button class="btn-link" @onclick="LoadSubscribers">↻ Refresh</button>
+
+        @if (subscribers.Count == 0)
+        {
+            <p>No subscribers yet. <a href="/subscribe">Add one</a>.</p>
+        }
+        else
+        {
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Location</th>
+                        <th>Alert Preferences</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in subscribers)
+                    {
+                        <tr>
+                            <td>@s.Name</td>
+                            <td>@s.Email</td>
+                            <td>@s.City, @s.State</td>
+                            <td>@string.Join(", ", s.AlertPreferences)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<SubscriberDto> subscribers = [];
+    private List<AlertResultGroup> alertResults = [];
+    private bool training = false;
+    private bool sending = false;
+    private string trainMessage = string.Empty;
+    private string sendMessage = string.Empty;
+
+    // Live training log entries polled from the API
+    private List<TrainingLogDto> trainingLogs = [];
+    private System.Threading.Timer? _pollTimer;
+
+    private HttpClient ApiClient => HttpClientFactory.CreateClient("WeatherAlertAPI");
+
+    protected override async Task OnInitializedAsync()
+        => await LoadSubscribers();
+
+    private async Task LoadSubscribers()
+        => subscribers = await ApiClient.GetFromJsonAsync<List<SubscriberDto>>("api/subscribers") ?? [];
+
+    private async Task TrainModels()
+    {
+        training = true;
+        trainMessage = string.Empty;
+        trainingLogs = [];
+
+        var response = await ApiClient.PostAsync("api/ml/train", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            trainMessage = "Training started — watch the live log below.";
+            // Start polling the progress endpoint every 2 seconds
+            _pollTimer = new System.Threading.Timer(
+                async _ => await PollTrainingProgress(),
+                null,
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(2));
+        }
+        else
+        {
+            training = false;
+            trainMessage = "❌ Training request failed.";
+        }
+    }
+
+    // Called every 2 seconds while training is running
+    private async Task PollTrainingProgress()
+    {
+        try
+        {
+            var result = await ApiClient
+                .GetFromJsonAsync<TrainingProgressResponse>("api/ml/progress");
+
+            if (result != null)
+            {
+                trainingLogs = result.Logs;
+
+                // Stop polling when training is complete or failed
+                if (!result.IsTraining)
+                {
+                    training = false;
+                    _pollTimer?.Dispose();
+                    trainMessage = result.IsComplete
+                        ? "✅ Training complete — models are ready!"
+                        : "❌ Training failed. Check logs below.";
+                }
+            }
+        }
+        catch { /* silently ignore poll errors */ }
+
+        // Tell Blazor to re-render with the new logs
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SendAlerts()
+    {
+        sending = true;
+        sendMessage = string.Empty;
+        alertResults = [];
+
+        var response = await ApiClient.PostAsync("api/alerts/send-to-all", null);
+        sending = false;
+
+        if (response.IsSuccessStatusCode)
+        {
+            var data = await response.Content
+                .ReadFromJsonAsync<SendAlertsResponse>();
+
+            if (data?.Results != null)
+                alertResults = data.Results;
+
+            sendMessage = $"✅ Processed {data?.Processed} subscriber(s). " +
+                          $"Emails sent for active alerts.";
+        }
+        else
+        {
+            var err = await response.Content.ReadAsStringAsync();
+            sendMessage = $"❌ {err}";
+        }
+    }
+
+    // Clean up the timer when the component is disposed
+    public void Dispose() => _pollTimer?.Dispose();
+
+    // DTO shapes
+    private class SubscriberDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;
+        public List<string> AlertPreferences { get; set; } = [];
+    }
+
+    private class TrainingProgressResponse
+    {
+        public bool IsTraining { get; set; }
+        public bool IsComplete { get; set; }
+        public List<TrainingLogDto> Logs { get; set; } = [];
+    }
+
+    private class TrainingLogDto
+    {
+        public string Message { get; set; } = string.Empty;
+        public string Level { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+    }
+
+    private class SendAlertsResponse
+    {
+        public int Processed { get; set; }
+        public List<AlertResultGroup> Results { get; set; } = [];
+    }
+
+    private class AlertResultGroup
+    {
+        public string Subscriber { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public WeatherInputDto WeatherInput { get; set; } = new();
+        public List<PredictionDto> Predictions { get; set; } = [];
+    }
+
+    private class WeatherInputDto
+    {
+        public float Temperature { get; set; }
+        public float Humidity { get; set; }
+        public float Precipitation { get; set; }
+        public float WindSpeed { get; set; }
+        public float SurfacePressure { get; set; }
+        public float CloudCover { get; set; }
+        public float WindGusts { get; set; }
+    }
+
+    private class PredictionDto
+    {
+        public string AlertType { get; set; } = string.Empty;
+        public string ModelUsed { get; set; } = string.Empty;
+        public bool IsAlert { get; set; }
+        public float Confidence { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
+}
